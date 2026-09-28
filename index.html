@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hiragana Words Flashcards</title>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --primary-dark: #357abd;
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-color: #2c3e50;
+      --subtext-color: #7f8c8d;
+      --correct-color: #2ecc71;
+      --incorrect-color: #e74c3c;
+      --accent-color: #f39c12;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+    }
+
+    .game-container {
+      background-color: var(--card-bg);
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Top Navigation / Selector Bar */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .pack-badge {
+      background-color: #eef5fc;
+      color: var(--primary-color);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .change-pack-btn {
+      background: none;
+      border: 1px solid #dcdfe6;
+      color: var(--subtext-color);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .change-pack-btn:active {
+      background-color: #f0f0f0;
+    }
+
+    /* Stats display */
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: var(--subtext-color);
+      font-size: 15px;
+      background-color: #f8fafc;
+      padding: 10px 16px;
+      border-radius: 12px;
+    }
+
+    .stats span {
+      color: var(--text-color);
+      font-weight: 700;
+    }
+
+    /* Flashcard presentation */
+    .card-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0 25px 0;
+      min-height: 180px;
+    }
+
+    .word-display {
+      font-size: 56px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin: 0;
+      color: var(--text-color);
+      user-select: none;
+      word-break: break-all;
+    }
+
+    .romaji-display {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-top: 12px;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+
+    /* Option Tiles */
+    .options {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .tile {
+      flex: 1;
+      aspect-ratio: 1 / 1;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+      padding: 8px;
+      word-break: break-word;
+      line-height: 1.2;
+    }
+
+    .tile:hover:not(:disabled) {
+      opacity: 0.95;
+      transform: translateY(-2px);
+    }
+
+    .tile:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .tile.incorrect {
+      background-color: var(--incorrect-color) !important;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.85;
+    }
+
+    .tile.correct {
+      background-color: var(--correct-color) !important;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+    }
+
+    /* Pack Selection Screen */
+    .pack-selector-screen h2 {
+      margin-top: 0;
+      color: var(--text-color);
+      font-size: 24px;
+    }
+
+    .pack-selector-screen p {
+      color: var(--subtext-color);
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .pack-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pack-card {
+      background-color: #ffffff;
+      border: 2px solid #eef2f7;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pack-card:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(74, 144, 226, 0.12);
+    }
+
+    .pack-card:active {
+      transform: translateY(0);
+    }
+
+    .pack-info h3 {
+      margin: 0 0 4px 0;
+      font-size: 17px;
+      color: var(--text-color);
+    }
+
+    .pack-info p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--subtext-color);
+    }
+
+    .pack-count {
+      background-color: #f0f4f8;
+      color: var(--primary-color);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+
+    /* Screen utilities */
+    .hidden {
+      display: none !important;
+    }
+
+    .btn-action {
+      margin-top: 20px;
+      background-color: var(--text-color);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.2s;
+    }
+
+    .btn-action:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--subtext-color);
+      border: 1px solid #dcdfe6;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <!-- 1. PACK SELECTOR SCREEN -->
+    <div id="pack-screen" class="pack-selector-screen">
+      <h2>Select Word Pack</h2>
+      <p>Choose a 30-card deck of common Hiragana words</p>
+      
+      <div class="pack-grid">
+        <div class="pack-card" onclick="selectPack(0)">
+          <div class="pack-info">
+            <h3>Pack 1: Everyday Basics</h3>
+            <p>1–30 • Greetings, basic nouns & family</p>
+          </div>
+          <span class="pack-count">30 Cards</span>
+        </div>
+
+        <div class="pack-card" onclick="selectPack(1)">
+          <div class="pack-info">
+            <h3>Pack 2: Food, Places & Nature</h3>
+            <p>31–60 • Dakuon, food & daily items</p>
+          </div>
+          <span class="pack-count">30 Cards</span>
+        </div>
+
+        <div class="pack-card" onclick="selectPack(2)">
+          <div class="pack-info">
+            <h3>Pack 3: Actions & Descriptives</h3>
+            <p>61–90 • Common verbs, adjectives & Handakuon</p>
+          </div>
+          <span class="pack-count">30 Cards</span>
+        </div>
+
+        <div class="pack-card" onclick="selectPack(3)">
+          <div class="pack-info">
+            <h3>Pack 4: Advanced Combination Words</h3>
+            <p>91–120 • Contracted sounds (ょ/ゅ/ゃ) & long vowels</p>
+          </div>
+          <span class="pack-count">30 Cards</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. GAME SCREEN -->
+    <div id="game-screen" class="hidden">
+      <div class="header-bar">
+        <div class="pack-badge" id="current-pack-label">Pack 1</div>
+        <button class="change-pack-btn" onclick="showPackSelection()">Change Pack</button>
+      </div>
+
+      <div class="stats">
+        <div>Progress: <span id="progress">0</span> / <span id="total-cards">30</span></div>
+        <div>First-Try Score: <span id="score">0</span></div>
+      </div>
+
+      <div class="card-area">
+        <div class="word-display" id="word-display">ねこ</div>
+        <div class="romaji-display" id="romaji-display">neko</div>
+      </div>
+
+      <div class="options" id="options-container">
+        <!-- 3 side-by-side square buttons injected by JS -->
+      </div>
+    </div>
+
+    <!-- 3. GAME OVER SCREEN -->
+    <div id="game-over-screen" class="hidden">
+      <h2 style="font-size: 28px; margin-bottom: 5px;">🎉 Pack Complete!</h2>
+      <p style="color: var(--subtext-color); margin-top: 0;" id="game-over-pack-title">Pack 1: Everyday Basics</p>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0;">
+        <h3 style="margin: 0 0 10px 0; font-size: 15px; color: var(--subtext-color);">First-Try Accuracy</h3>
+        <p style="font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 0;">
+          <span id="final-score">0</span> / <span id="final-total">30</span>
+        </p>
+        <p style="font-size: 18px; font-weight: 700; color: var(--text-color); margin: 5px 0 0 0;">
+          (<span id="percentage">0</span>%)
+        </p>
+      </div>
+
+      <button class="btn-action" onclick="restartCurrentPack()">Play Pack Again</button>
+      <button class="btn-action btn-secondary" onclick="showPackSelection()">Choose Another Pack</button>
+    </div>
+  </div>
+
+  <script>
+    // 120 Essential Hiragana words split into 4 packs of 30 cards each
+    const hiraganaWordPacks = [
+      // PACK 1: Everyday Basics & Animals (1-30)
+      {
+        title: "Pack 1: Everyday Basics",
+        cards: [
+          { word: "ねこ", romaji: "neko", english: "Cat" },
+          { word: "いぬ", romaji: "inu", english: "Dog" },
+          { word: "とり", romaji: "tori", english: "Bird" },
+          { word: "さかな", romaji: "sakana", english: "Fish" },
+          { word: "ひと", romaji: "hito", english: "Person" },
+          { word: "こども", romaji: "kodomo", english: "Child" },
+          { word: "ともだち", romaji: "tomodachi", english: "Friend" },
+          { word: "わたし", romaji: "watashi", english: "I / Me" },
+          { word: "はな", romaji: "hana", english: "Flower / Nose" },
+          { word: "やま", romaji: "yama", english: "Mountain" },
+          { word: "川", romaji: "kawa", english: "River" },
+          { word: "そら", romaji: "sora", english: "Sky" },
+          { word: "あめ", romaji: "ame", english: "Rain / Candy" },
+          { word: "ゆき", romaji: "yuki", english: "Snow" },
+          { word: "うみ", romaji: "umi", english: "Sea / Ocean" },
+          { word: "いえ", romaji: "ie", english: "House" },
+          { word: "まち", romaji: "machi", english: "Town / City" },
+          { word: "くるま", romaji: "kuruma", english: "Car" },
+          { word: "みず", romaji: "mizu", english: "Water" },
+          { word: "ほん", romaji: "hon", english: "Book" },
+          { word: "かさ", romaji: "kasa", english: "Umbrella" },
+          { word: "くつ", romaji: "kutsu", english: "Shoes" },
+          { word: "ふく", romaji: "fuku", english: "Clothes" },
+          { word: "て", romaji: "te", english: "Hand" },
+          { word: "め", romaji: "me", english: "Eye" },
+          { word: "みみ", romaji: "mimi", english: "Ear" },
+          { word: "くち", romaji: "kuchi", english: "Mouth" },
+          { word: "あたま", romaji: "atama", english: "Head" },
+          { word: "あさ", romaji: "asa", english: "Morning" },
+          { word: "よる", romaji: "yoru", english: "Night" }
+        ]
+      },
+      // PACK 2: Food, Places & Dakuon (31-60)
+      {
+        title: "Pack 2: Food, Places & Nature",
+        cards: [
+          { word: "たまご", romaji: "tamago", english: "Egg" },
+          { word: "りんご", romaji: "ringo", english: "Apple" },
+          { word: "いちご", romaji: "ichigo", english: "Strawberry" },
+          { word: "みかん", romaji: "mikan", english: "Mandarin Orange" },
+          { word: "ごはん", romaji: "gohan", english: "Rice / Meal" },
+          { word: "おちゃ", romaji: "ocha", english: "Green Tea" },
+          { word: "くだもの", romaji: "kudamono", english: "Fruit" },
+          { word: "やさい", romaji: "yasai", english: "Vegetable" },
+          { word: "さくら", romaji: "sakura", english: "Cherry Blossom" },
+          { word: "かぜ", romaji: "kaze", english: "Wind / Cold" },
+          { word: "えき", romaji: "eki", english: "Station" },
+          { word: "みせ", romaji: "mise", english: "Shop" },
+          { word: "くにも", romaji: "kuni", english: "Country" },
+          { word: "かぎ", romaji: "kagi", english: "Key" },
+          { word: "かばん", romaji: "kaban", english: "Bag" },
+          { word: "かみ", romaji: "kami", english: "Paper / Hair" },
+          { word: "ふね", romaji: "fune", english: "Ship / Boat" },
+          { word: "ひこうき", romaji: "hikouki", english: "Airplane" },
+          { word: "でんしゃ", romaji: "densha", english: "Train" },
+          { word: "じてんしゃ", romaji: "jitensha", english: "Bicycle" },
+          { word: "ちず", romaji: "chizu", english: "Map" },
+          { word: "しんぶん", romaji: "shinbun", english: "Newspaper" },
+          { word: "てがみ", romaji: "tegami", english: "Letter" },
+          { word: "かがみ", romaji: "kagami", english: "Mirror" },
+          { word: "めがね", romaji: "megane", english: "Glasses" },
+          { word: "ぞう", romaji: "zou", english: "Elephant" },
+          { word: "さる", romaji: "saru", english: "Monkey" },
+          { word: "うさぎ", romaji: "usagi", english: "Rabbit" },
+          { word: "かえる", romaji: "kaeru", english: "Frog" },
+          { word: "くま", romaji: "kuma", english: "Bear" }
+        ]
+      },
+      // PACK 3: Actions, Descriptives & Handakuon (61-90)
+      {
+        title: "Pack 3: Actions & Descriptives",
+        cards: [
+          { word: "たべる", romaji: "taberu", english: "To eat" },
+          { word: "のむ", romaji: "nomu", english: "To drink" },
+          { word: "みる", romaji: "miru", english: "To see / watch" },
+          { word: "きく", romaji: "kiku", english: "To listen / hear" },
+          { word: "いく", romaji: "iku", english: "To go" },
+          { word: "くる", romaji: "kuru", english: "To come" },
+          { word: "かう", romaji: "kau", english: "To buy" },
+          { word: "かく", romaji: "kaku", english: "To write" },
+          { word: "よむ", romaji: "yomu", english: "To read" },
+          { word: "はなす", romaji: "hanasu", english: "To speak" },
+          { word: "あるく", romaji: "aruku", english: "To walk" },
+          { word: "走る", romaji: "hashiru", english: "To run" },
+          { word: "あかい", romaji: "akai", english: "Red" },
+          { word: "あおい", romaji: "aoi", english: "Blue" },
+          { word: "しろい", romaji: "shiroi", english: "White" },
+          { word: "くろい", romaji: "kuroi", english: "Black" },
+          { word: "おおきい", romaji: "ookii", english: "Big" },
+          { word: "ちいさい", romaji: "chiisai", english: "Small" },
+          { word: "たかい", romaji: "takai", english: "High / Expensive" },
+          { word: "やすい", romaji: "yasui", english: "Cheap" },
+          { word: "あたらしい", romaji: "atarashii", english: "New" },
+          { word: "ふるい", romaji: "furui", english: "Old" },
+          { word: "いい", romaji: "ii", english: "Good" },
+          { word: "わるい", romaji: "warui", english: "Bad" },
+          { word: "さんぽ", romaji: "sanpo", english: "A walk / Stroll" },
+          { word: "きっぷ", romaji: "kippu", english: "Ticket" },
+          { word: "えんぴつ", romaji: "enpitsu", english: "Pencil" },
+          { word: "しっぽ", romaji: "shippo", english: "Tail" },
+          { word: "てんぷら", romaji: "tenpura", english: "Tempura" },
+          { word: "かんぱい", romaji: "kanpai", english: "Cheers!" }
+        ]
+      },
+      // PACK 4: Advanced Combination Sounds & Long Vowels (91-120)
+      {
+        title: "Pack 4: Advanced Combination Words",
+        cards: [
+          { word: "きょうしつ", romaji: "kyoushitsu", english: "Classroom" },
+          { word: "べんきょう", romaji: "benkyou", english: "Study" },
+          { word: "とうきょう", romaji: "toukyou", english: "Tokyo" },
+          { word: "しゃしん", romaji: "shashin", english: "Photograph" },
+          { word: "じゅぎょう", romaji: "jugyou", english: "Lesson / Class" },
+          { word: "しょうぼうしゃ", romaji: "shoubousha", english: "Fire engine" },
+          { word: "きゅうきゅうしゃ", romaji: "kyuukyuusha", english: "Ambulance" },
+          { word: "びょういん", romaji: "byouin", english: "Hospital" },
+          { word: "美容院", romaji: "biyouin", english: "Hair salon" },
+          { word: "りょこう", romaji: "ryokou", english: "Travel / Trip" },
+          { word: "りょうり", romaji: "ryouri", english: "Cooking" },
+          { word: "おもちゃ", romaji: "omocha", english: "Toy" },
+          { word: "きょう", romaji: "kyou", english: "Today" },
+          { word: "きのう", romaji: "kinou", english: "Yesterday" },
+          { word: "あした", romaji: "ashita", english: "Tomorrow" },
+          { word: "がっこう", romaji: "gakkou", english: "School" },
+          { word: "ざっし", romaji: "zasshi", english: "Magazine" },
+          { word: "きっじてん", romaji: "kissaten", english: "Coffee shop" },
+          { word: "おとうさん", romaji: "otousan", english: "Father" },
+          { word: "おかあさん", romaji: "okaasan", english: "Mother" },
+          { word: "おにいさん", romaji: "oniisan", english: "Older brother" },
+          { word: "おねえさん", romaji: "oneesan", english: "Older sister" },
+          { word: "おとうと", romaji: "otouto", english: "Younger brother" },
+          { word: "いもうと", romaji: "imouto", english: "Younger sister" },
+          { word: "おじいさん", romaji: "ojiisan", english: "Grandfather" },
+          { word: "おばあさん", romaji: "obaasan", english: "Grandmother" },
+          { word: "にほん", romaji: "nihon", english: "Japan" },
+          { word: "えいご", romaji: "eigo", english: "English language" },
+          { word: "せんせい", romaji: "sensei", english: "Teacher" },
+          { word: "がくせい", romaji: "gakusei", english: "Student" }
+        ]
+      }
+    ];
+
+    let currentPackIndex = 0;
+    let activeDeck = [];
+    let currentIndex = 0;
+    let firstTryScore = 0;
+    let isFirstAttempt = true;
+
+    // DOM References
+    const packScreen = document.getElementById('pack-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    
+    const currentPackLabel = document.getElementById('current-pack-label');
+    const wordDisplay = document.getElementById('word-display');
+    const romajiDisplay = document.getElementById('romaji-display');
+    const optionsContainer = document.getElementById('options-container');
+    
+    const progressEl = document.getElementById('progress');
+    const totalCardsEl = document.getElementById('total-cards');
+    const scoreEl = document.getElementById('score');
+    
+    const gameOverPackTitle = document.getElementById('game-over-pack-title');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalTotalEl = document.getElementById('final-total');
+    const percentageEl = document.getElementById('percentage');
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function showPackSelection() {
+      packScreen.classList.remove('hidden');
+      gameScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+    }
+
+    function selectPack(packIdx) {
+      currentPackIndex = packIdx;
+      startPackGame();
+    }
+
+    function restartCurrentPack() {
+      startPackGame();
+    }
+
+    function startPackGame() {
+      const selectedPack = hiraganaWordPacks[currentPackIndex];
+      activeDeck = shuffleArray(selectedPack.cards);
+      currentIndex = 0;
+      firstTryScore = 0;
+
+      currentPackLabel.textContent = `Pack ${currentPackIndex + 1}`;
+      totalCardsEl.textContent = activeDeck.length;
+      scoreEl.textContent = firstTryScore;
+
+      packScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+
+      loadCard();
+    }
+
+    function loadCard() {
+      isFirstAttempt = true;
+      progressEl.textContent = currentIndex + 1;
+
+      const currentCard = activeDeck[currentIndex];
+      wordDisplay.textContent = currentCard.word;
+      romajiDisplay.textContent = currentCard.romaji;
+
+      // Pool distractor answers from ALL 120 cards to guarantee choice variety
+      const allCardsCombined = hiraganaWordPacks.flatMap(pack => pack.cards);
+      const otherCards = allCardsCombined.filter(item => item.english !== currentCard.english);
+      const shuffledOthers = shuffleArray(otherCards);
+      const wrongOptions = [shuffledOthers[0].english, shuffledOthers[1].english];
+
+      // Combine right answer and two wrong options, then shuffle
+      const choices = shuffleArray([currentCard.english, ...wrongOptions]);
+
+      optionsContainer.innerHTML = '';
+      choices.forEach(optionText => {
+        const button = document.createElement('button');
+        button.classList.add('tile');
+        button.textContent = optionText;
+        button.onclick = () => checkAnswer(button, optionText, currentCard.english);
+        optionsContainer.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedButton, selectedEnglish, correctEnglish) {
+      if (selectedEnglish === correctEnglish) {
+        selectedButton.classList.add('correct');
+        
+        if (isFirstAttempt) {
+          firstTryScore++;
+          scoreEl.textContent = firstTryScore;
+        }
+
+        // Lock all buttons during transition
+        const buttons = optionsContainer.querySelectorAll('.tile');
+        buttons.forEach(btn => btn.disabled = true);
+
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex < activeDeck.length) {
+            loadCard();
+          } else {
+            endGame();
+          }
+        }, 500);
+
+      } else {
+        selectedButton.classList.add('incorrect');
+        selectedButton.disabled = true;
+        isFirstAttempt = false;
+      }
+    }
+
+    function endGame() {
+      gameScreen.classList.add('hidden');
+      gameOverScreen.classList.remove('hidden');
+
+      const packTitle = hiraganaWordPacks[currentPackIndex].title;
+      gameOverPackTitle.textContent = packTitle;
+
+      finalScoreEl.textContent = firstTryScore;
+      finalTotalEl.textContent = activeDeck.length;
+      
+      const percentage = Math.round((firstTryScore / activeDeck.length) * 100);
+      percentageEl.textContent = percentage;
+    }
+  </script>
+</body>
+</html>
