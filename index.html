@@ -15,6 +15,8 @@
       --correct-color: #2ecc71;
       --incorrect-color: #e74c3c;
       --accent-color: #f39c12;
+      --shade-bg: #e2e8f0;
+      --shade-text: #64748b;
     }
 
     * {
@@ -119,13 +121,39 @@
       word-break: break-all;
     }
 
-    .romaji-display {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--primary-color);
-      margin-top: 12px;
-      letter-spacing: 0.5px;
+    /* Shaded Romaji Reveal Box */
+    .romaji-container {
+      margin-top: 16px;
+    }
+
+    .romaji-box {
+      background-color: var(--shade-bg);
+      color: var(--shade-text);
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 8px 20px;
+      min-width: 160px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
       user-select: none;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .romaji-box:hover {
+      background-color: #cbd5e1;
+    }
+
+    .romaji-box.revealed {
+      background-color: #eef5fc;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
 
     /* Option Tiles */
@@ -328,7 +356,11 @@
 
       <div class="card-area">
         <div class="word-display" id="word-display">ねこ</div>
-        <div class="romaji-display" id="romaji-display">neko</div>
+        <div class="romaji-container">
+          <div class="romaji-box" id="romaji-box" onclick="revealRomaji()">
+            Tap to show Romaji
+          </div>
+        </div>
       </div>
 
       <div class="options" id="options-container">
@@ -373,7 +405,7 @@
           { word: "わたし", romaji: "watashi", english: "I / Me" },
           { word: "はな", romaji: "hana", english: "Flower / Nose" },
           { word: "やま", romaji: "yama", english: "Mountain" },
-          { word: "川", romaji: "kawa", english: "River" },
+          { word: "かわ", romaji: "kawa", english: "River" },
           { word: "そら", romaji: "sora", english: "Sky" },
           { word: "あめ", romaji: "ame", english: "Rain / Candy" },
           { word: "ゆき", romaji: "yuki", english: "Snow" },
@@ -411,7 +443,7 @@
           { word: "かぜ", romaji: "kaze", english: "Wind / Cold" },
           { word: "えき", romaji: "eki", english: "Station" },
           { word: "みせ", romaji: "mise", english: "Shop" },
-          { word: "くにも", romaji: "kuni", english: "Country" },
+          { word: "くに", romaji: "kuni", english: "Country" },
           { word: "かぎ", romaji: "kagi", english: "Key" },
           { word: "かばん", romaji: "kaban", english: "Bag" },
           { word: "かみ", romaji: "kami", english: "Paper / Hair" },
@@ -446,7 +478,7 @@
           { word: "よむ", romaji: "yomu", english: "To read" },
           { word: "はなす", romaji: "hanasu", english: "To speak" },
           { word: "あるく", romaji: "aruku", english: "To walk" },
-          { word: "走る", romaji: "hashiru", english: "To run" },
+          { word: "はしる", romaji: "hashiru", english: "To run" },
           { word: "あかい", romaji: "akai", english: "Red" },
           { word: "あおい", romaji: "aoi", english: "Blue" },
           { word: "しろい", romaji: "shiroi", english: "White" },
@@ -479,7 +511,7 @@
           { word: "しょうぼうしゃ", romaji: "shoubousha", english: "Fire engine" },
           { word: "きゅうきゅうしゃ", romaji: "kyuukyuusha", english: "Ambulance" },
           { word: "びょういん", romaji: "byouin", english: "Hospital" },
-          { word: "美容院", romaji: "biyouin", english: "Hair salon" },
+          { word: "びよういん", romaji: "biyouin", english: "Hair salon" },
           { word: "りょこう", romaji: "ryokou", english: "Travel / Trip" },
           { word: "りょうり", romaji: "ryouri", english: "Cooking" },
           { word: "おもちゃ", romaji: "omocha", english: "Toy" },
@@ -488,7 +520,7 @@
           { word: "あした", romaji: "ashita", english: "Tomorrow" },
           { word: "がっこう", romaji: "gakkou", english: "School" },
           { word: "ざっし", romaji: "zasshi", english: "Magazine" },
-          { word: "きっじてん", romaji: "kissaten", english: "Coffee shop" },
+          { word: "きっさてん", romaji: "kissaten", english: "Coffee shop" },
           { word: "おとうさん", romaji: "otousan", english: "Father" },
           { word: "おかあさん", romaji: "okaasan", english: "Mother" },
           { word: "おにいさん", romaji: "oniisan", english: "Older brother" },
@@ -518,7 +550,7 @@
     
     const currentPackLabel = document.getElementById('current-pack-label');
     const wordDisplay = document.getElementById('word-display');
-    const romajiDisplay = document.getElementById('romaji-display');
+    const romajiBox = document.getElementById('romaji-box');
     const optionsContainer = document.getElementById('options-container');
     
     const progressEl = document.getElementById('progress');
@@ -577,9 +609,12 @@
 
       const currentCard = activeDeck[currentIndex];
       wordDisplay.textContent = currentCard.word;
-      romajiDisplay.textContent = currentCard.romaji;
 
-      // Pool distractor answers from ALL 120 cards to guarantee choice variety
+      // Reset Romaji box to hidden state
+      romajiBox.classList.remove('revealed');
+      romajiBox.textContent = "Tap to show Romaji";
+
+      // Pool distractor answers from ALL 120 cards
       const allCardsCombined = hiraganaWordPacks.flatMap(pack => pack.cards);
       const otherCards = allCardsCombined.filter(item => item.english !== currentCard.english);
       const shuffledOthers = shuffleArray(otherCards);
@@ -596,6 +631,12 @@
         button.onclick = () => checkAnswer(button, optionText, currentCard.english);
         optionsContainer.appendChild(button);
       });
+    }
+
+    function revealRomaji() {
+      const currentCard = activeDeck[currentIndex];
+      romajiBox.classList.add('revealed');
+      romajiBox.textContent = currentCard.romaji;
     }
 
     function checkAnswer(selectedButton, selectedEnglish, correctEnglish) {
