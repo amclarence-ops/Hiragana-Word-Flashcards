@@ -652,6 +652,7 @@
         const buttons = optionsContainer.querySelectorAll('.tile');
         buttons.forEach(btn => btn.disabled = true);
 
+        // Tripled delay from 500ms to 1500ms to give time to visualize
         setTimeout(() => {
           currentIndex++;
           if (currentIndex < activeDeck.length) {
@@ -659,7 +660,7 @@
           } else {
             endGame();
           }
-        }, 500);
+        }, 1500);
 
       } else {
         selectedButton.classList.add('incorrect');
